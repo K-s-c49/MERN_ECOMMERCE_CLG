@@ -96,8 +96,7 @@ The project is divided into 12 phases:
 9. ⏳ **Frontend Setup (React)**
 10. ⏳ **Frontend - User Features**
 11. ⏳ **Frontend - Admin Features**
-12. ⏳ **Testing & Quality Assurance**
-13. ⏳ **Deployment & Documentation**
+12. ⏳ **Testing & Quality Assurance & Deployment**
 
 See [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md) for detailed tasks and progress.
 
