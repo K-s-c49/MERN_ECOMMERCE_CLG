@@ -1,7 +1,12 @@
 import Product from "../model/productmodel.js";
+import handleAsyncError from "../middleware/handleAsyncerror.js";
+import APIFunctionality from "../utilis/apiFunctionality.js";
+import handleError from "../utilis/handlError.js";
 // creating a product
 
-export const createproduct = async (req, res) => {
+// http://localhost:8000/api/v1/product/694d2352bba1253ca33c723e?keyword=shirt
+
+export const createproduct = handleAsyncError (async (req, res, next) => {
     try {
         const product = await Product.create(req.body);
         return res.status(201).json({
@@ -14,31 +19,51 @@ export const createproduct = async (req, res) => {
             message: err.message,
         });
     }
-};
+});
+
 // get all products
-export const getallproducts = async (req, res) => {
+export const getallproducts = handleAsyncError (async (req, res, next) => {
     try {
-        const products = await Product.find();
+        const resultPerPage = 9;
+        const apiFunctionality = new APIFunctionality(Product.find(), req.query)
+            .search()
+            .filter();
+
+        const totalProducts = await Product.countDocuments();
+        const filteredProducts = await apiFunctionality.query.clone();
+        const filteredProductsCount = filteredProducts.length;
+
+        //pagination
+
+        apiFunctionality.pagination(resultPerPage);
+        const products = await apiFunctionality.query;
+
+        const page = Number(req.query.page) || 1;
+        const totalPages = Math.max(1, Math.ceil(filteredProductsCount / resultPerPage));
+        if (page > totalPages && filteredProductsCount > 0) {
+            return next(new handleError("Page number exceeds total pages", 404));
+        }
+
         return res.status(200).json({
             success: true,
+            totalProducts,
+            filteredProductsCount,
             count: products.length,
             products,
         });
     } catch (err) {
         return res.status(500).json({ success: false, message: err.message });
     }
-};
+});
 
 // UPDATE PRODUCT
-export const updateproduct = async (req, res) => {
+export const updateproduct = handleAsyncError (async (req, res, next) => {
     try {
         let product = await Product.findById(req.params.id);
         
         if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: "Product not found",
-            });
+            return next(new handleError("Product not found", 404));
+       
         }
 
         product = await Product.findByIdAndUpdate(
@@ -57,18 +82,15 @@ export const updateproduct = async (req, res) => {
             message: err.message,
         });
     }
-};
+});
       
 // DELETE PRODUCT
-export const deleteproduct = async (req, res) => {
+export const deleteproduct = handleAsyncError (async (req, res, next) => {
     try {
         const product = await Product.findByIdAndDelete(req.params.id);
         
         if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: "Product not found",
-            });
+            return next(new handleError("Product not found", 404));
         }
         
         return res.status(200).json({
@@ -81,17 +103,14 @@ export const deleteproduct = async (req, res) => {
             message: err.message,
         });
     }
-};
+});
 // GET SINGLE PRODUCT
-export const getsingleproduct = async (req, res) => {
+export const getsingleproduct = handleAsyncError (async (req, res, next) => {
     try {
         const product = await Product.findById(req.params.id);
         
         if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: "Product not found",
-            });
+            return next(new handleError("Product not found", 404));     
         }
         
         return res.status(200).json({
@@ -100,8 +119,8 @@ export const getsingleproduct = async (req, res) => {
         });
     } catch (err) {
         return res.status(400).json({
-            success: false,
-            message: err.message,
+            success: false, 
+            message: "Product not found",
         });
     }
-};
+});
