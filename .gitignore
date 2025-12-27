@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# OS / editor
+.DS_Store
+.vscode/
+
+# Env files (secrets)
+.env
+.env.*
+backend/config/config.env
+
+# Misc
+*.local
