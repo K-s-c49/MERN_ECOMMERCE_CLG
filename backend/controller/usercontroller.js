@@ -1,7 +1,10 @@
 import handleAsyncError from "../middleware/handleAsyncerror.js";
 import User from "../model/usermodel.js";
+import crypto from "crypto";
+import mongoose from "mongoose";
 import handleError from "../utilis/handlError.js";
 import { sendToken } from "../utilis/jwtTOKEN.js";
+import { sendEmial } from "../utilis/sendEmail.js";
  
 
 // register user
@@ -59,7 +62,7 @@ export const logoutuser = handleAsyncError (async (req, res, next) => {
     });
 });
 
-// reset password request
+// FORGOT password request
 
 export const requestPasswordReset = handleAsyncError (async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email });
@@ -82,9 +85,14 @@ export const requestPasswordReset = handleAsyncError (async (req, res, next) => 
     const message = `Your password reset token is:\n\n${resetPasswordURL}\n\nIf you did not request this email, please ignore it.`;
     try {
         // Email sending is not configured; respond success generically
+        await sendEmial({
+            email: user.email,
+            subject: "Password Recovery",
+            message,
+        });
         return res.status(200).json({
             success: true,
-            message: `Password reset instructions have been initiated for ${user.email}`,
+            message: `Email is send to  ${user.email} successfully`,
         });
     } catch (error) {
         user.resetPasswordToken = undefined;
@@ -92,4 +100,141 @@ export const requestPasswordReset = handleAsyncError (async (req, res, next) => 
         await user.save({ validateBeforeSave: false });
         return next(new handleError(error.message, 500));
     }
+});
+
+// reset password
+
+export const resetPassword = handleAsyncError (async (req, res, next) => {
+    // Hash the token from URL params
+    const resetPasswordToken = crypto
+        .createHash("sha256")
+        .update(req.params.token)
+        .digest("hex");
+
+    // Find user with this token and check if token hasn't expired
+    const user = await User.findOne({
+        resetPasswordToken,
+        resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+        return next(new handleError("Reset password token is invalid or has expired", 400));
+    }
+
+    // Check if password and confirm password match
+    if (req.body.password !== req.body.confirmPassword) {
+        return next(new handleError("Password and confirm password do not match", 400));
+    }
+
+    // Set new password
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    // Log the user in, send JWT
+    sendToken(user, 200, res);
+});
+
+export const getUserDetails = handleAsyncError (async (req, res, next) => {
+    const user = await User.findById(req.user._id);
+    res.status(200).json({  
+        success: true,
+        user,
+    }); 
+});
+
+// UPDATE PASSWORD
+export const updatePassword = handleAsyncError (async (req, res, next) => {
+    const user = await User.findById(req.user._id).select("+password"); 
+    const isPasswordMatched = await user.verifyPassword(req.body.oldPassword);
+    if (!isPasswordMatched) {
+        return next(new handleError("Old password is incorrect", 400));
+    }
+    if (req.body.newPassword !== req.body.confirmPassword) {
+        return next(new handleError("Password does not match", 400));
+    }
+    user.password = req.body.newPassword;
+    await user.save();
+    sendToken(user, 200, res);
+});
+
+// UPDATE USER PROFILE
+export const updateUserProfile = handleAsyncError (async (req, res, next) => {
+    const newUserData = {
+        name: req.body.name,
+        email: req.body.email,
+    };
+    const user = await User.findByIdAndUpdate(req.user._id, newUserData, {
+        new: true,
+        runValidators: true,    
+        useFindAndModify: false,
+    });
+    res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        user,
+    });
+});
+
+// ADMIN: Get all users
+export const getUsersList = handleAsyncError (async (req, res, next) => {
+    const users = await User.find();
+    res.status(200).json({
+        success: true,
+        users,
+    });
+});
+
+// ADMIN: Get single user details
+export const getSinghleUser = handleAsyncError (async (req, res, next) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return next(new handleError(`User does not exist with id: ${req.params.id}`, 404));
+    }
+    const user = await User.findById(req.params.id);
+    if (!user) {
+        return next(new handleError(`User does not exist with id: ${req.params.id}`, 404));
+    }
+    res.status(200).json({
+        success: true,
+        user,
+    });
+});
+
+// Admin-change user role and details
+export const updateUserRole = handleAsyncError (async (req, res, next) => {
+    const newUserData = {
+        name: req.body.name,    
+        email: req.body.email,
+        role: req.body.role,
+    };
+    const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+    });
+
+    if (!user) {
+        return next(new handleError(`User does not exist with id: ${req.params.id}`, 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "User role updated successfully",
+        user,
+    });
+});
+
+// ADMIN: Delete user
+export const deleteUser = handleAsyncError (async (req, res, next) => {
+   const user = await User.findByIdAndDelete(req.params.id);
+
+   if (!user) {
+       return next(new handleError(`User does not exist with id: ${req.params.id}`, 404));
+   }
+   res.status(200).json({
+       success: true,
+       message: "User deleted successfully",
+   });
 });
