@@ -1,1 +1,19 @@
+import nodemailer from "nodemailer";
 // intentionally left blank (reverted)
+export const  sendEmial = async (options) => {
+    // intentionally left blank (reverted)
+  const transporter = nodemailer.createTransport({
+    service: process.env.SMTP_SERVICE,
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+    },
+  });
+    const mailOptions = {
+        from: process.env.SMTP_USER,
+        to: options.email,
+        subject: options.subject,
+        text: options.message,
+    };
+    await transporter.sendMail(mailOptions);
+}
