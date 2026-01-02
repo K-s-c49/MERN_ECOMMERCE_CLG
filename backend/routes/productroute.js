@@ -8,6 +8,9 @@ const router = express.Router();
 router.route("/products")
 .get(getallproducts);
 
+router.route("/product/:id")
+.get(getsingleproduct);
+
 router.route("/review").put(verifyUserAuth,createReviewProduct);
 
 router.route("/reviews").get(getProductReviews).delete(verifyUserAuth,deleteReview);
