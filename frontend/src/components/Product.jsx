@@ -21,7 +21,7 @@ const handleRatingChange = (newRating) => {
         />
         <div className='product-details'>
             <h3 className="product-title">{product.name}</h3>
-            <p className='product-price'><strong>Price: </strong>₹{product.price?.toLocaleString('en-IN')}</p>
+            <p className='home-price'><strong>Price: </strong>₹{product.price?.toLocaleString('en-IN')}</p>
             <div className="rating_container">
               <Rating
               value={product.ratings}

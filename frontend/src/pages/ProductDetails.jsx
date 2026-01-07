@@ -40,6 +40,8 @@ function ProductDetails() {
     const increaseQuantity = () => {
         if (product && quantity < product.stock) {
             setQuantity(quantity + 1);
+        } else if (product && quantity >= product.stock) {
+            toast.warning('Cannot add more than available stock', { autoClose: 2000 });
         }
     };
     
@@ -92,7 +94,9 @@ function ProductDetails() {
                             <input type="text" value={quantity} readOnly className='quantity-value'/>
                             <button className='quantity-button' onClick={increaseQuantity}>+</button>
                         </div>
-                        <button className='add-to-cart-btn'>Add to Cart</button>
+                        <button className='add-to-cart-btn' onClick={() => {
+                            toast.success(`Added ${quantity} item(s) to cart!`, { autoClose: 2000 });
+                        }}>Add to Cart</button>
                         <form className="review-form">
                             <h3>Write a Review</h3>
                             <Rating 

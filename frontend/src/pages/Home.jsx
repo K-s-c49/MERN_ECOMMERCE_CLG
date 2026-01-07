@@ -9,23 +9,15 @@ import PageTitle from '../components/PageTitle'
 import { useDispatch, useSelector } from 'react-redux'
 import Loader from '../components/Loader'
 import { useEffect } from 'react'
-import { getProducts, removeError } from '../features/products/productSlice'
-import { toast } from 'react-toastify'
-
+import { getProducts } from '../features/products/productSlice'
 
 function Home() {
-const {loading,error, products, productCount}  = useSelector((state) => state.products);
+const {loading, products}  = useSelector((state) => state.products);
 const dispatch = useDispatch();
 useEffect(() => {
-  dispatch(getProducts());
+  dispatch(getProducts({}));
 }, [dispatch]);
 
-useEffect(() => {
-  if (error) {
-    toast.error(error.message , { position: 'top-center', autoClose: 3000 });
-    dispatch(removeError());
-  } 
-}, [dispatch, error]);
 return (
     <>
 { loading ?(<Loader />)
@@ -37,9 +29,13 @@ return (
     <div className='home-container'> 
       <h2 className='home-heading'>Trending Now</h2>
       <div className='home-product-container'>
-        {products.map((product, index) => (
-          <Product product={product} key={product._id || index}/>
-        ))}
+        {products && products.length > 0 ? (
+          products.map((product, index) => (
+            <Product product={product} key={product._id || index}/>
+          ))
+        ) : (
+          <p style={{textAlign: 'center', fontSize: '1.1rem', color: '#666'}}>No products available</p>
+        )}
       </div>
     </div>
       <Footer />

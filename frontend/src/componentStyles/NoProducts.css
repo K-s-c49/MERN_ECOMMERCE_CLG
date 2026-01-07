@@ -15,9 +15,20 @@
   }
   
   .no-products-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     font-size: 3rem;
     color: #666;
     margin-bottom: 1rem;
+  }
+
+  .no-products-image {
+    width: 300px;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+    margin-bottom: 1.5rem;
   }
   
   .no-products-title {
@@ -29,5 +40,5 @@
   
   .no-products-message {
     color: #666;
-    max-width: 400px;
+    max-width: 900px;
   }

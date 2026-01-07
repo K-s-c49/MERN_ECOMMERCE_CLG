@@ -1,26 +1,36 @@
 .search-container {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .search-form {
   display: flex;
   align-items: center;
-  transition: width 0.3s ease;
+  gap: 0;
 }
 
 .search-input {
   width: 0;
-  padding: 5px;
+  padding: 8px 0;
   border: none;
-  border-radius: 5px;
+  border-bottom: 2px solid #fff;
+  background-color: transparent;
   outline: none;
-  transition: width 0.3s ease;
+  transition: width 0.4s ease;
   opacity: 0;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .search-form.active .search-input {
-  width: 100px;
+  width: 150px;
   opacity: 1;
+  padding: 8px 12px 8px 0;
 }
 
 .search-icon {
@@ -31,14 +41,21 @@
   align-items: center;
   justify-content: center;
   padding: 5px;
+  color: #fff;
+  transition: all 0.3s ease;
 }
+
+.search-icon:hover {
+  transform: scale(1.1);
+}
+
 .search-icon:focus,
 .search-icon:active {
   outline: none !important;
   border: none !important;
 }
+
 .search-icon .MuiSvgIcon-root {
   color: #fff;
   font-size: 1.5rem;
-
 }
