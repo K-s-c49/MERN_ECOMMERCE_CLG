@@ -1,9 +1,14 @@
-import app from './app.js';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+// load environment variables using path relative to this file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, 'config', 'config.env') });
+import app from './app.js';
 import { connectMongodatabase } from './config/db.js';
 
-dotenv.config({ path: './backend/config/config.env' });
-connectMongodatabase()
+connectMongodatabase();
 // handle uncaught Exception
 process.on('uncaughtException', (err) => {
     console.log(`Error: ${err.message}`);

@@ -5,24 +5,69 @@ import mongoose from "mongoose";
 import handleError from "../utilis/handlError.js";
 import { sendToken } from "../utilis/jwtTOKEN.js";
 import { sendEmial } from "../utilis/sendEmail.js";
+import cloudinary from "../utilis/cloudinary.js";
  
 
 // register user
 export const registeruser = handleAsyncError (async (req, res, next) => {
-    const { name, email, password } = req.body;
-
-    const user = await User.create({
-        name,
-        email,
-        password,
-        avatar: {
-            public_id: "this is temp id",
-            url: "this is temp url"
+    const { name, email, password, avatar } = req.body;
+    // Server-side validation
+    if (!name || !email || !password) {
+        return next(new handleError("All fields are required", 400));
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        return next(new handleError("Invalid email format", 400));
+    }
+    if (password.length < 8) {
+        return next(new handleError("Password must be at least 8 characters", 400));
+    }
+    // Check for duplicate email
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+        return next(new handleError("Email already registered", 400));
+    }
+    // Avatar upload to Cloudinary
+    let avatarObj = { public_id: "default_id", url: "default_url" };
+    // Support either file upload (req.files.avatar) or base64 string (req.body.avatar)
+    let avatarData = null;
+    if (req.files && req.files.avatar) {
+        // express-fileupload with useTempFiles: true provides tempFilePath
+        console.log('Received file upload in req.files.avatar');
+        avatarData = req.files.avatar.tempFilePath || req.files.avatar.data;
+    } else if (avatar) {
+        console.log('Received avatar in req.body.avatar');
+        avatarData = avatar;
+    }
+    if (avatarData) {
+        try {
+            console.log("Uploading avatar to Cloudinary...");
+            const myCloud = await cloudinary.uploader.upload(avatarData, {
+                folder: "avatars",
+                width: 150,
+                crop: "scale",
+            });
+            avatarObj = {
+                public_id: myCloud.public_id,
+                url: myCloud.secure_url
+            };
+            console.log("Cloudinary upload success:", avatarObj);
+        } catch (err) {
+            console.error("Cloudinary upload error:", err);
+            return next(new handleError("Avatar upload failed: " + (err.message || "Unknown error"), 500));
         }
-    });
-
-   sendToken(user, 201, res);
-
+    }
+    try {
+        const user = await User.create({
+            name,
+            email,
+            password,
+            avatar: avatarObj
+        });
+        sendToken(user, 201, res);
+    } catch (err) {
+        console.error("User creation error:", err);
+        return next(new handleError("User creation failed: " + (err.message || "Unknown error"), 500));
+    }
 });
 // login user
 export const loginuser = handleAsyncError (async (req, res, next) => {
@@ -136,7 +181,7 @@ export const resetPassword = handleAsyncError (async (req, res, next) => {
     // Log the user in, send JWT
     sendToken(user, 200, res);
 });
-
+// GET USER DETAILS
 export const getUserDetails = handleAsyncError (async (req, res, next) => {
     const user = await User.findById(req.user._id);
     res.status(200).json({  

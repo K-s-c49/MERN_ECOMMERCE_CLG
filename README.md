@@ -134,3 +134,15 @@ npm start
 ---
 
 **Last Updated**: December 26, 2025
+
+---
+
+### ✅ Quick Update (2026-01-09)
+
+- Fixed registration flow: Cloudinary avatar upload, server-side validation, and robust error messages.
+- Improved Redux `userSlice` thunks for safe error handling and corrected auth flags to avoid duplicate toasts.
+- Frontend fixes: `Register.jsx`, `Login.jsx`, `Profile.jsx`, `UserDashboard.jsx` — null-safety, overlay behavior, logout flow, and UX improvements.
+- Backend fixes: ensured dotenv loads early (`server.js`), increased JSON body limit (`app.js`), file upload temp dir fixed, and `cloudinary` util loads config reliably.
+- Added detailed logging around Cloudinary uploads and user creation to help debugging server errors.
+
+Please restart your backend after updating `.env` and run end-to-end tests for registration, login, and avatar upload.

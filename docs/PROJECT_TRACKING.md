@@ -53,6 +53,21 @@ Last updated: 2026-01-07
 - Ensured URL parameter synchronization across all features
 - Professional animations and transitions throughout UI
 
+## Recent Fixes & Actions - 2026-01-09
+
+- Fixed registration endpoint issues: resolved Cloudinary configuration and upload handling for both base64 and file uploads.
+- Hardened backend startup: dotenv now loads before app modules, and DB connection path is resolved reliably.
+- Increased request body limit to accept large base64 avatar uploads and adjusted file upload temp directory for Windows compatibility.
+- Enhanced frontend login/register flow: single toast behavior, safer null-checking, and consistent redux error messages.
+- Improved developer logs for Cloudinary uploads and user creation to ease debugging.
+
+### Action Items Completed
+
+- Update `backend/config/config.env` with correct Cloudinary and DB credentials.
+- Restart backend and run integration tests for register/login/logout and avatar upload.
+
+---
+
 ## Recent Fixes
 ### 2025-12-30
 - Implemented complete order management system with controllers, models, and routes.
