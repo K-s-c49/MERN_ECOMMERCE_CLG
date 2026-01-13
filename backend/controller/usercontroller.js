@@ -211,14 +211,46 @@ export const updateUserProfile = handleAsyncError (async (req, res, next) => {
         name: req.body.name,
         email: req.body.email,
     };
+
+    // Support avatar update sent as a file (req.files.avatar) or base64 string (req.body.avatar)
+    let avatarData = null;
+    if (req.files && req.files.avatar) {
+        avatarData = req.files.avatar.tempFilePath || req.files.avatar.data;
+    } else if (req.body.avatar) {
+        avatarData = req.body.avatar;
+    }
+
+    // If avatar is being updated, delete old image from Cloudinary
+    if (avatarData) {
+        try {
+            const user = await User.findById(req.user._id);
+            if (user.avatar && user.avatar.public_id && user.avatar.public_id !== 'default_id') {
+                await cloudinary.uploader.destroy(user.avatar.public_id);
+            }
+            const myCloud = await cloudinary.uploader.upload(avatarData, {
+                folder: 'avatars',
+                width: 150,
+                crop: 'scale',
+            });
+            newUserData.avatar = {
+                public_id: myCloud.public_id,
+                url: myCloud.secure_url,
+            };
+        } catch (err) {
+            console.error('Cloudinary upload failed during profile update:', err);
+            return next(new handleError('Avatar upload failed: ' + (err.message || 'Unknown error'), 500));
+        }
+    }
+
     const user = await User.findByIdAndUpdate(req.user._id, newUserData, {
         new: true,
-        runValidators: true,    
+        runValidators: true,
         useFindAndModify: false,
     });
+
     res.status(200).json({
         success: true,
-        message: "Profile updated successfully",
+        message: 'Profile updated successfully',
         user,
     });
 });

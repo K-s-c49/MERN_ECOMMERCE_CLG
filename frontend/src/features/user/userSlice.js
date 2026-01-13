@@ -1,12 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../axios.js";
 
 //  register user api call
 
  export const registerUser = createAsyncThunk("user/register", async (userData, { rejectWithValue }) => {
     try {
            // Let the browser set the Content-Type (with boundary) for FormData
-           const {data} = await axios.post("http://localhost:8000/api/v1/register", userData);
+           const {data} = await axios.post("/register", userData);
            console.log('registration response', data);
            return data;
     } catch (error) {
@@ -22,7 +22,7 @@ export const login = createAsyncThunk("user/login", async ({email,password}, { r
                 "Content-Type": "application/json",
             },
         };
-           const {data} = await axios.post("http://localhost:8000/api/v1/login", {email,password}, config);
+           const {data} = await axios.post("/login", {email,password}, config);
            console.log('login response', data);
            return data;
     } catch (error) {
@@ -33,7 +33,7 @@ export const login = createAsyncThunk("user/login", async ({email,password}, { r
 
 export const loadUser = createAsyncThunk("user/loadUser", async (_, { rejectWithValue }) => { 
     try {
-        const {data} = await axios.get("http://localhost:8000/api/v1/profile");
+        const {data} = await axios.get("/profile");
         console.log('load user response', data);
         return data;
     } catch (error) {  
@@ -44,10 +44,23 @@ export const loadUser = createAsyncThunk("user/loadUser", async (_, { rejectWith
 
 export const logout = createAsyncThunk("user/logout", async (_, { rejectWithValue }) => {
     try {
-        const {data} = await axios.post("http://localhost:8000/api/v1/logout",{withCredentials:true});
+        const {data} = await axios.post("/logout");
         return data;
     } catch (error) {
         return rejectWithValue(error.response.data.message || "Failed to logout user");
+    }
+});
+
+export const updateProfile = createAsyncThunk("user/updateProfile", async (userData, { rejectWithValue }) => {
+    try {
+        console.log("[userSlice] updateProfile thunk called", userData);
+        const { data } = await axios.put("/profile/update", userData);
+        console.log("[userSlice] updateProfile API response", data);
+        return data;
+    } catch (error) {
+        console.error("[userSlice] updateProfile error", error);
+        const message = error?.response?.data?.message || error?.message || "Failed to update profile";
+        return rejectWithValue(message);
     }
 });
 
@@ -59,6 +72,7 @@ export const userSlice = createSlice({
         error: null,
         success: false,
         isAuthenticated: false,
+        message: null,
     },
     reducers: {
         removeError(state) {
@@ -147,6 +161,23 @@ export const userSlice = createSlice({
         .addCase(logout.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload || "Logout failed";
+        });
+        // update profile case
+        builder
+        .addCase(updateProfile.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        })
+        .addCase(updateProfile.fulfilled, (state, action) => {
+            state.loading = false;
+            state.error = null;
+            state.success = action.payload.success;
+            state.user = action.payload.user || null;
+            state.message = action.payload.message || "Profile updated successfully";
+        })
+        .addCase(updateProfile.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || "Update profile failed";
         });
     }
 });

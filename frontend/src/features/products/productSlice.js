@@ -1,5 +1,5 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
-import axios from 'axios';
+import axios from '../../axios.js';
 import { toast } from 'react-toastify';
 
 export const getProducts = createAsyncThunk('product/getProducts', async ({keyword = '', page = 1, category = ''} = {}, { rejectWithValue }) => {
