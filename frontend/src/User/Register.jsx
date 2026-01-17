@@ -90,7 +90,7 @@ function Register() {
           </div>
           <button className='authBtn'>Sign Up</button>
           <p className='form-links'>
-            Already have an account? <Link to="/login">Sign in here</Link>
+            Already have an account? <Link to="/login">Login here</Link>
           </p>
         </form>
       </div>

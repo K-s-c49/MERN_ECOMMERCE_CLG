@@ -126,7 +126,10 @@ export const requestPasswordReset = handleAsyncError (async (req, res, next) => 
     } catch (error) {
         return next(new handleError("Could not generate reset token", 500));
     }
-    const resetPasswordURL = `${req.protocol}://${req.get("host")}/api/v1/password/reset/${resetToken}`;
+    // Prefer a configured frontend URL so reset links open the frontend app.
+    // Set FRONTEND_URL in your environment (e.g. http://localhost:5173)
+    const frontendBase = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
+    const resetPasswordURL = `${frontendBase}/password/reset/${resetToken}`;
     const message = `Your password reset token is:\n\n${resetPasswordURL}\n\nIf you did not request this email, please ignore it.`;
     try {
         // Email sending is not configured; respond success generically
@@ -192,15 +195,34 @@ export const getUserDetails = handleAsyncError (async (req, res, next) => {
 
 // UPDATE PASSWORD
 export const updatePassword = handleAsyncError (async (req, res, next) => {
-    const user = await User.findById(req.user._id).select("+password"); 
-    const isPasswordMatched = await user.verifyPassword(req.body.oldPassword);
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    // Basic request validation
+    if (!oldPassword || !newPassword || !confirmPassword) {
+        return next(new handleError("Please provide oldPassword, newPassword and confirmPassword", 400));
+    }
+
+    // Password complexity check (server-side)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+        return next(new handleError("Password must be at least 8 characters and include uppercase, lowercase, number and special character", 400));
+    }
+
+    if (newPassword !== confirmPassword) {
+        return next(new handleError("New password and confirm password do not match", 400));
+    }
+
+    const user = await User.findById(req.user._id).select("+password");
+    if (!user) {
+        return next(new handleError("User not found", 404));
+    }
+
+    const isPasswordMatched = await user.verifyPassword(oldPassword);
     if (!isPasswordMatched) {
         return next(new handleError("Old password is incorrect", 400));
     }
-    if (req.body.newPassword !== req.body.confirmPassword) {
-        return next(new handleError("Password does not match", 400));
-    }
-    user.password = req.body.newPassword;
+
+    user.password = newPassword;
     await user.save();
     sendToken(user, 200, res);
 });
