@@ -41,6 +41,23 @@ export const getProductDetails = createAsyncThunk('product/getProductDetails', a
         return rejectWithValue(errorMsg);
     }
 });
+// submit review
+export const createReview = createAsyncThunk('product/createReview', async ({ rating, comment, productId }, { rejectWithValue }) => {
+    try {
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        };
+         const { data } = await axios.put('/review', { rating, comment, productId }, config);
+        return data;
+    }
+        catch (error) { 
+            return rejectWithValue(error.response?.data?.message || 'Failed to submit review');
+    }
+});
+
+export 
 const productSlice = createSlice({
     name: 'products',
     initialState: {
@@ -51,11 +68,16 @@ const productSlice = createSlice({
         product:null,
         resultPerPage: 4,
         totalPages: 0,
+        reviewsSuccess: false,
+        reviewLoading: false,
     },
     reducers: {
         // Define your reducers here
         removeError(state) {
             state.error = null;
+        },
+        removeSuccess(state) {
+            state.reviewsSuccess = false;
         }
     },
     extraReducers: (builder) => {
@@ -92,7 +114,25 @@ const productSlice = createSlice({
             state.loading = false;
             state.error = action.payload || 'Something went wrong';
         });
+        // submit review
+        builder
+        .addCase(createReview.pending, (state) => {
+            state.reviewLoading = true;
+            state.error = null;
+            state.reviewsSuccess = false;
+        })
+        .addCase(createReview.fulfilled, (state, action) => {
+            state.reviewLoading = false;
+            state.reviewsSuccess = true;
+            if (action.payload?.product) {
+                state.product = action.payload.product;
+            }
+        })
+        .addCase(createReview.rejected, (state, action) => {
+            state.reviewLoading = false;
+            state.error = action.payload || 'Something went wrong';
+        });
     },  
 });
- export const { removeError } = productSlice.actions;
+ export const { removeError, removeSuccess } = productSlice.actions;
 export default productSlice.reducer;                

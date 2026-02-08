@@ -14,6 +14,16 @@ import { loadUser } from './features/user/userSlice.js'
 import Updatepassword from './User/Updatepassword.jsx'
 import Forgotpassword from './User/Forgotpassword.jsx'
 import ResetPassword from './User/ResetPassword.jsx'
+import Cart from './Cart/Cart.jsx'
+import Shipping from './Cart/Shipping.jsx'
+import OrderConfirm from './Cart/OrderConfirm.jsx'
+import {Payment} from './Cart/Payment.jsx'
+import PaymentSuccess from './Cart/PaymentSuccess.jsx'
+import MyOrders from './Orders/MyOrders.jsx'
+import OrderDetails from './Orders/OrderDetails.jsx'
+import Dashboard from './Admin/Dashboard.jsx'
+import ProductList from './Admin/ProductList.jsx'
+import CreateProduct from './Admin/Createproduct.jsx'
 
 function App() {
   const { isAuthenticated, user } = useSelector(state => state.user);
@@ -23,7 +33,7 @@ function App() {
     // Dispatch loadUser action to fetch user data on app load
     dispatch(loadUser());
     }
-  }, [dispatch]);
+  }, [dispatch, isAuthenticated]);
   console.log("App component - isAuthenticated:", isAuthenticated,user);
   return (
    <Router>
@@ -39,6 +49,17 @@ function App() {
       <Route path="/password/update" element={<ProtectedRoute element={<Updatepassword />} />} />
       <Route path="/password/forgot" element={<Forgotpassword />} />
       <Route path="/password/reset/:token" element={<ResetPassword />} />
+      <Route path="/cart" element={<Cart />} />
+      <Route path="/shipping" element={<ProtectedRoute element={<Shipping />} />} />
+      <Route path="/order/confirm" element={<ProtectedRoute element={<OrderConfirm />} />} />
+      <Route path="/process/payment" element={<ProtectedRoute element={<Payment />} />} />
+      <Route path="/order" element={<ProtectedRoute element={<PaymentSuccess />} />} />
+      <Route path="/order/:orderId" element={<ProtectedRoute element={<OrderDetails />} />}  />
+      <Route path="/orders/user" element={<ProtectedRoute element={<MyOrders />} />} />
+      {/* admin route */}
+      <Route path="/admin/dashboard" element={<ProtectedRoute element={<Dashboard/>} adminOnly={true} />} />
+      <Route path="/admin/products" element={<ProtectedRoute element={<ProductList/>} adminOnly={true} />} />
+      <Route path="/admin/products/create" element={<ProtectedRoute element={<CreateProduct/>} adminOnly={true} />} />
     </Routes>
     {isAuthenticated && (<UserDashboard  user={user}/>)}
    </Router>

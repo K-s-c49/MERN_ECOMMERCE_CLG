@@ -17,7 +17,7 @@ const handleRatingChange = (newRating) => {
             src={product.images && product.images[0]?.url} 
             alt={product.name}
             className="product-image-card"
-            onError={(e) => e.target.src = 'https://via.placeholder.com/250x200?text=No+Image'}
+            onError={(e) => { e.target.onerror = null; e.target.src = '/images/productnotfound.png'; }}
         />
         <div className='product-details'>
             <h3 className="product-title">{product.name}</h3>

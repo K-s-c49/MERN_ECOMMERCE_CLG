@@ -1,15 +1,21 @@
 import React from 'react'
 import { useSelector } from 'react-redux';
 import Loader from './Loader.jsx';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
-function ProtectedRoute({ element }) {
-    const { isAuthenticated, loading } = useSelector(state => state.user);
+function ProtectedRoute({ element,adminOnly = false }) {
+    const { isAuthenticated, loading, user } = useSelector(state => state.user);
+    const location = useLocation();
     if (loading) {
         return <Loader />;
     }
     if (!isAuthenticated) {
-        return <Navigate to="/login" />;
+        // preserve attempted path so login can redirect back
+        const redirectTo = `/login?redirect=${encodeURIComponent(location.pathname)}`;
+        return <Navigate to={redirectTo} />;
+    }
+    if (adminOnly && user.role !== 'admin') {
+        return <Navigate to="/" />;
     }
     return element;
 }

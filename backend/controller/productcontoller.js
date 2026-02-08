@@ -3,11 +3,30 @@ import handleAsyncError from "../middleware/handleAsyncerror.js";
 import APIFunctionality from "../utilis/apiFunctionality.js";
 import handleError from "../utilis/handlError.js";
 import mongoose from "mongoose";
+import {v2 as cloudinary} from "cloudinary";
 // creating a product
 
 // http://localhost:8000/api/v1/product/694d2352bba1253ca33c723e?keyword=shirt
 
 export const createproduct = handleAsyncError (async (req, res, next) => {
+    let images = [];
+    if (typeof req.body.images === "string") {
+        images.push(req.body.images);
+    }else {
+        images = req.body.images;
+    }
+
+    const imagesLinks = [];
+    for (let i = 0; i < images.length; i++) {
+        const result = await cloudinary.uploader.upload(images[i], {
+            folder: "products",
+        }); 
+        imagesLinks.push({
+            public_id: result.public_id,
+            url: result.secure_url,
+        });
+    }
+    req.body.images = imagesLinks;
     req.body.user = req.user.id;
     const product = await Product.create(req.body);
     return res.status(201).json({

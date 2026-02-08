@@ -90,6 +90,12 @@
   background: rgba(220, 53, 69, 0.2);
 }
 
+.payment-date {
+  margin-left: 0.5rem;
+  color: #555;
+  font-size: 0.95rem;
+}
+
 
 @media (max-width: 768px) {
   .table-title {

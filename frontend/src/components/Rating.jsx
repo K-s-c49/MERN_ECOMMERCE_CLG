@@ -34,18 +34,22 @@ const generateStars = () => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
         const isFilled = i <= (hoveredrating || selectedRating);
-        stars.push(   
+        stars.push(
             <span
-            key={i} 
-            className={`star ${isFilled ? 'filled' : ''}`}
-            onMouseEnter={() => handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            onClick={() => handleClick(i)}
-            style={{pointerEvents:disable?'none':'auto'}}
-
-            >🟉</span> 
+                key={i}
+                className={`star ${isFilled ? 'filled' : ''}`}
+                onMouseEnter={() => handleMouseEnter(i)}
+                onMouseLeave={() => handleMouseLeave()}
+                onClick={() => handleClick(i)}
+                style={{ pointerEvents: disable ? 'none' : 'auto', cursor: disable ? 'default' : 'pointer' }}
+                role="button"
+                tabIndex={disable ? -1 : 0}
+                aria-label={`Rate ${i} star${i > 1 ? 's' : ''}`}
+            >
+                ★
+            </span>
         );
-    }  
+    }
     return stars;
 };
     return (

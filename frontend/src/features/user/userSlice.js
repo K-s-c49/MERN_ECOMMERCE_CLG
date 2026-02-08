@@ -96,11 +96,11 @@ export const forgotPassword = createAsyncThunk("user/forgotPassword", async (ema
 export const userSlice = createSlice({
     name: "user",
     initialState: {
-        user: null,
+        user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
         loading: false,
         error: null,
         success: false,
-        isAuthenticated: false,
+        isAuthenticated: localStorage.getItem('isAuthenticated') === 'true',
         message: null,
     },
     reducers: {
@@ -127,6 +127,13 @@ export const userSlice = createSlice({
             // Do not mark as authenticated on registration to avoid
             // triggering login-success UI (user should explicitly log in)
             state.isAuthenticated = false;
+            // store in localStorage if needed (use consistent key 'user')
+            try {
+                localStorage.setItem('user', JSON.stringify(state.user));
+                localStorage.setItem('isAuthenticated', JSON.stringify(state.isAuthenticated));
+            } catch (e) {
+                console.warn('Failed to persist user after registration', e);
+            }
         })
         .addCase(registerUser.rejected, (state, action) => {
             state.loading = false;
@@ -148,6 +155,9 @@ export const userSlice = createSlice({
             state.user = action.payload.user || null;
             state.isAuthenticated = Boolean(action.payload.success);
             console.log("User logged in:", state.user);
+              // store in localStorage if needed
+            localStorage.setItem('user', JSON.stringify(state.user));
+            localStorage.setItem('isAuthenticated', JSON.stringify(state.isAuthenticated));
         })
         .addCase(login.rejected, (state, action) => {
             state.loading = false;
@@ -167,6 +177,9 @@ export const userSlice = createSlice({
             state.error = null;
             state.user = action.payload.user || null;
             state.isAuthenticated = Boolean(action.payload.success);
+              // store in localStorage if needed
+            localStorage.setItem('user', JSON.stringify(state.user));
+            localStorage.setItem('isAuthenticated', JSON.stringify(state.isAuthenticated));
 
         })
         .addCase(loadUser.rejected, (state, action) => {
@@ -174,6 +187,17 @@ export const userSlice = createSlice({
             state.error = action.payload || "Load user failed";
             state.isAuthenticated = false;
             state.user = null;
+
+            if (action.payload?.statuscode === 401) {
+                state.user = null;
+                state.isAuthenticated = false;
+                try {
+                    localStorage.removeItem('user');
+                    localStorage.setItem('isAuthenticated', JSON.stringify(false));
+                } catch (e) {
+                    console.warn('Failed to update localStorage on unauthorized', e);
+                }
+            }
         });
         // logout case
         builder
@@ -186,6 +210,13 @@ export const userSlice = createSlice({
             state.error = null;
             state.user = null;
             state.isAuthenticated = false;
+            try {
+                localStorage.removeItem('user');
+                localStorage.setItem('isAuthenticated', JSON.stringify(false));
+            } catch (e) {
+                console.warn('Failed to update localStorage on logout', e);
+            }
+            
         })
         .addCase(logout.rejected, (state, action) => {
             state.loading = false;

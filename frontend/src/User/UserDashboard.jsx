@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import '../userStyles/UserDashboard.css'
+import '../UserStyles/UserDashboard.css'
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logout, removeError } from '../features/user/userSlice.js';
 import { toast } from 'react-toastify';
 
 const UserDashboard = ({ user }) => {
+    const { cartItems = [] } = useSelector(state => state.cart || {});
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [menuVisible, setMenuVisible] = useState(false);
@@ -15,10 +16,20 @@ const UserDashboard = ({ user }) => {
     const options = [
         {name: 'Orders', funcName:orders},
         {name: 'Account', funcName:profile},
+        {name: `Cart (${cartItems.length})`, funcName:mycart,isCart:true},
         {name: 'Logout', funcName:logoutUser},
     ];
-    if (user.role==='admin') {
+    if (user?.role === 'admin') {
         options.unshift({name: 'Admin Dashboard', funcName:dashboard});
+    }
+
+    // Close menu and invoke the option function
+    function handleOptionClick(fn) {
+        try {
+            fn && fn();
+        } finally {
+            setMenuVisible(false);
+        }
     }
     function dashboard() {
         navigate('/admin/dashboard');
@@ -28,6 +39,9 @@ const UserDashboard = ({ user }) => {
     }
     function profile() {
         navigate('/profile');
+    }
+    function mycart() {
+        navigate('/cart');
     }
     function logoutUser() {
         // dispatch returns a promise for createAsyncThunk; unwrap to get actual result or throw
@@ -57,7 +71,11 @@ const UserDashboard = ({ user }) => {
                 {menuVisible && (
                     <div className='menu-options'>
                         {options.map((items) => (
-                            <button key={items.name} className='menu-option-btn' onClick={items.funcName}>
+                            <button
+                                key={items.name}
+                                className={`menu-option-btn ${items.isCart ? (cartItems.length > 0 ? 'cart-not-empty' : '') : ''}`}
+                                onClick={() => handleOptionClick(items.funcName)}
+                            >
                                 {items.name}
                             </button>
                         ))}

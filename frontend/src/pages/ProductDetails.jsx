@@ -8,34 +8,58 @@ import Loader from '../components/Loader'
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
-import { getProductDetails, removeError } from '../features/products/productSlice.js'
+import { createReview, getProductDetails, removeError, removeSuccess } from '../features/products/productSlice.js'
+import { additemsToCart, removeError as removeCartError, removeMessage as removeCartMessage } from '../features/Cart/cartSlice.js'
 import { toast } from 'react-toastify'
 
 function ProductDetails() {
     const [userRating, setUserRating] = useState(0);
     const [quantity, setQuantity] = useState(1);
+    const [comment, setComment] = useState('');
     
     const handleRatingChange = (newRating) => {
         setUserRating(newRating);
     }
     
-    const { loading, product, error } = useSelector((state) => state.products);
+    const { loading, product, error, reviewsSuccess, reviewLoading } = useSelector((state) => state.products);
+    const { loading: cartLoading, error: cartError, success: cartSuccess, message: cartMessage } = useSelector((state) => state.cart);
     const dispatch = useDispatch();
     const { id } = useParams();
-    
+
     useEffect(() => {
         dispatch(getProductDetails(id));
         return () => {
             dispatch(removeError());
         };
     }, [dispatch, id]);
-    
+
     useEffect(() => {
         if (error) {
             toast.error(error);
             dispatch(removeError());
         }
     }, [error, dispatch]);
+
+    useEffect(() => {
+        if (cartError) {
+            toast.error(cartError, { position: 'top-center', autoClose: 2000 });
+            dispatch(removeCartError());
+        }
+        if (cartSuccess) {
+            toast.success(cartMessage || 'Cart updated', { position: 'top-center', autoClose: 2000 });
+            dispatch(removeCartMessage());
+        }
+    }, [cartError, cartSuccess, cartMessage, dispatch]);
+
+    useEffect(() => {
+        if (reviewsSuccess) {
+            toast.success('Review submitted successfully', { position: 'top-center', autoClose: 2000 });
+            setUserRating(0);
+            setComment('');
+            dispatch(removeSuccess());
+            dispatch(getProductDetails(id));
+        }
+    }, [reviewsSuccess, dispatch, id]);
     
     const increaseQuantity = () => {
         if (product && quantity < product.stock) {
@@ -51,9 +75,25 @@ function ProductDetails() {
         }
     };
     
-    if (loading || !product) {
+        const handleReviewSubmit = (e) => {
+            e.preventDefault();
+            if (!userRating) {
+                toast.warning('Please provide a rating', { position: 'top-center', autoClose: 2000 });
+                return;
+            }
+            dispatch(createReview({ rating: userRating, comment, productId: product._id }));
+        };
+         if (loading || !product) {
         return <Loader />;
     }
+        const addToCart = async () => {
+            try {
+                    await dispatch(additemsToCart({ id: product._id, quantity }));
+                    // success toast handled centrally via cart state effect
+                } catch (e) {
+                    toast.error('Failed to add to cart', { autoClose: 2000 });
+                }
+        };
     
     return (
         <>
@@ -66,7 +106,7 @@ function ProductDetails() {
                             src={product.images && product.images[0]?.url} 
                             alt={product.name} 
                             className='product-detail-image'
-                            onError={(e) => e.target.src = 'https://via.placeholder.com/400x400?text=No+Image'}
+                            onError={(e) => { e.target.onerror = null; e.target.src = '/images/productnotfound.png'; }}
                         />
                     </div>
                     <div className="product-info">
@@ -94,10 +134,8 @@ function ProductDetails() {
                             <input type="text" value={quantity} readOnly className='quantity-value'/>
                             <button className='quantity-button' onClick={increaseQuantity}>+</button>
                         </div>
-                        <button className='add-to-cart-btn' onClick={() => {
-                            toast.success(`Added ${quantity} item(s) to cart!`, { autoClose: 2000 });
-                        }}>Add to Cart</button>
-                        <form className="review-form">
+                        <button className='add-to-cart-btn' onClick={addToCart} disabled={cartLoading} >{cartLoading ? 'Adding...' : 'Add to Cart'}</button>
+                        <form className="review-form" onSubmit={handleReviewSubmit}>
                             <h3>Write a Review</h3>
                             <Rating 
                                 value={userRating}
@@ -107,8 +145,10 @@ function ProductDetails() {
                             <textarea 
                                 className='review-input' 
                                 placeholder='Write your review here...'
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)} required
                             ></textarea>
-                            <button type='submit' className='submit-review-btn'>Submit Review</button>
+                            <button type='submit' className='submit-review-btn' disabled={reviewLoading}>{reviewLoading ? 'Submitting...' : 'Submit Review'}</button>
                         </form>
                     </div>
                 </div>
