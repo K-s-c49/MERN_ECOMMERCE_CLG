@@ -123,6 +123,21 @@ npm install
 npm start
 ```
 
+### 📤 How to Push Your Code
+
+If you've created new features and want to push your code from VS Code, check out our comprehensive guide:
+
+**[Git Workflow Guide](docs/GIT_WORKFLOW.md)** - Complete guide for pushing code from VS Code
+
+**Quick commands:**
+```bash
+git add .
+git commit -m "Add new features: [describe your features]"
+git push origin main
+```
+
+For detailed instructions, troubleshooting, and best practices, see the [full Git workflow documentation](docs/GIT_WORKFLOW.md).
+
 ### 📚 Technologies Used
 
 - **Frontend**: React, Redux, Axios
