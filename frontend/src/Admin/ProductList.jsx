@@ -6,13 +6,28 @@ import Footer from '../components/Footer'
 import { Link } from 'react-router-dom'
 import { Delete, Edit } from '@mui/icons-material'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchAdminProduct, removeErrors } from '../features/admin/adminSlice'
+import { deleteProduct, fetchAdminProduct, removeErrors } from '../features/admin/adminSlice'
 import { toast } from 'react-toastify'
 import Loader from '../components/Loader'
 
 function ProductList() {
-    const { Products, loading, error } = useSelector(state => state.admin)
+    const { Products, loading, error, deleting } = useSelector(state => state.admin)
     const dispatch = useDispatch()
+
+    const formatDateTime = (value) => {
+        if (!value) return '—'
+        const date = new Date(value)
+        if (Number.isNaN(date.getTime())) return '—'
+
+        return date.toLocaleString(undefined, {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+        })
+    }
 
     useEffect(() => {
         dispatch(fetchAdminProduct())
@@ -24,6 +39,25 @@ function ProductList() {
             dispatch(removeErrors())
         }
     }, [error, dispatch])
+
+    const handledelete = (productId) => {
+        if (!productId) {
+            toast.error('Invalid product id.', { position: 'top-center', autoClose: 3000 })
+            return
+        }
+
+        const isconfirmed = window.confirm('Are you sure you want to delete this product?')
+        if (isconfirmed) {
+            dispatch(deleteProduct(productId))
+                .unwrap()
+                .then(() => {
+                    toast.success('Product deleted successfully!', { position: 'top-center', autoClose: 3000 })
+                })
+                .catch((err) => {
+                    toast.error(err || 'Failed to delete product.', { position: 'top-center', autoClose: 3000 })
+                })
+        }
+    }
 
     return (
         <>
@@ -71,14 +105,18 @@ function ProductList() {
                                             <td>{product?.ratings}</td>
                                             <td>{product?.category}</td>
                                             <td>{product?.stock}</td>
-                                            <td>{product?.createdAt ? new Date(product.createdAt).toLocaleDateString() : '—'}</td>
+                                            <td>{formatDateTime(product?.createdAt)}</td>
                                             <td>
-                                                <Link to={`/admin/products/${product?._id}`} className='action-icon edit-icon'>
+                                                <Link to={`/admin/product/${product?._id}`} className='action-icon edit-icon'>
                                                     <Edit />
                                                 </Link>
-                                                <Link to={`/admin/products/${product?._id}`} className='action-icon delete-icon'>
-                                                    <Delete />
-                                                </Link>
+                                                <button
+                                                    className='action-icon delete-icon'
+                                                    onClick={() => handledelete(product?._id)}
+                                                    disabled={Boolean(deleting?.[product?._id])}
+                                                >
+                                                    {deleting?.[product?._id] ? <Loader /> : <Delete />}
+                                                </button>
                                             </td>
                                         </tr>
                                     )

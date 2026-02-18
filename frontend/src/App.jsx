@@ -24,6 +24,11 @@ import OrderDetails from './Orders/OrderDetails.jsx'
 import Dashboard from './Admin/Dashboard.jsx'
 import ProductList from './Admin/ProductList.jsx'
 import CreateProduct from './Admin/Createproduct.jsx'
+import Updateproduct from './Admin/Updateproduct.jsx'
+import UsersList from './Admin/UsersList.jsx'
+import UpdateRole from './Admin/UpdateRole.jsx'
+import OrderList from './Admin/OrderList.jsx'
+import UpdateOders from './Admin/UpdateOders.jsx'
 
 function App() {
   const { isAuthenticated, user } = useSelector(state => state.user);
@@ -60,6 +65,11 @@ function App() {
       <Route path="/admin/dashboard" element={<ProtectedRoute element={<Dashboard/>} adminOnly={true} />} />
       <Route path="/admin/products" element={<ProtectedRoute element={<ProductList/>} adminOnly={true} />} />
       <Route path="/admin/products/create" element={<ProtectedRoute element={<CreateProduct/>} adminOnly={true} />} />
+      <Route path="/admin/product/:updateId" element={<ProtectedRoute element={<Updateproduct/>} adminOnly={true} />} />
+      <Route path="/admin/users" element={<ProtectedRoute element={<UsersList />} adminOnly={true} />} />
+      <Route path="/admin/user/:userId" element={<ProtectedRoute element={<UpdateRole />} adminOnly={true} />} />
+      <Route path="/admin/orders" element={<ProtectedRoute element={<OrderList />} adminOnly={true} />} />
+      <Route path="/admin/order/:orderId" element={<ProtectedRoute element={<UpdateOders />} adminOnly={true} />} />
     </Routes>
     {isAuthenticated && (<UserDashboard  user={user}/>)}
    </Router>

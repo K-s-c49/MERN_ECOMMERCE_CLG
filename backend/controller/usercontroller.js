@@ -303,12 +303,21 @@ export const getSinghleUser = handleAsyncError (async (req, res, next) => {
 
 // Admin-change user role and details
 export const updateUserRole = handleAsyncError (async (req, res, next) => {
-    const newUserData = {
-        name: req.body.name,    
-        email: req.body.email,
-        role: req.body.role,
-    };
-    const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+    const update = {};
+
+    if (typeof req.body.name === 'string' && req.body.name.trim()) {
+        update.name = req.body.name.trim();
+    }
+
+    if (typeof req.body.email === 'string' && req.body.email.trim()) {
+        update.email = req.body.email.trim();
+    }
+
+    if (typeof req.body.role === 'string' && req.body.role.trim()) {
+        update.role = req.body.role.trim();
+    }
+
+    const user = await User.findByIdAndUpdate(req.params.id, update, {
         new: true,
         runValidators: true,
         useFindAndModify: false,
@@ -327,13 +336,25 @@ export const updateUserRole = handleAsyncError (async (req, res, next) => {
 
 // ADMIN: Delete user
 export const deleteUser = handleAsyncError (async (req, res, next) => {
-   const user = await User.findByIdAndDelete(req.params.id);
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return next(new handleError(`User does not exist with id: ${req.params.id}`, 404));
+    }
 
-   if (!user) {
-       return next(new handleError(`User does not exist with id: ${req.params.id}`, 404));
-   }
-   res.status(200).json({
-       success: true,
-       message: "User deleted successfully",
-   });
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+        return next(new handleError(`User does not exist with id: ${req.params.id}`, 404));
+    }
+
+    const imageId = user?.avatar?.public_id;
+    if (imageId) {
+        await cloudinary.uploader.destroy(imageId);
+    }
+
+    await user.deleteOne();
+
+    res.status(200).json({
+        success: true,
+        message: "User deleted successfully",
+    });
 });

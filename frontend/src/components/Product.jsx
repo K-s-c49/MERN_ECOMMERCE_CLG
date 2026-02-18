@@ -11,7 +11,7 @@ const handleRatingChange = (newRating) => {
   console.log("New Rating:", newRating);
 }
   return (
-    <Link to={`product/${product._id}`} className='product_id'>
+    <Link to={`/product/${product._id}`} className='product_id'>
     <div className="product-card">
         <img 
             src={product.images && product.images[0]?.url} 
