@@ -18,7 +18,25 @@ import {
   YouTube,
 } from "@mui/icons-material";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { fetchAdminProduct, fetchAllOrders } from "../features/admin/adminSlice";
+
 function Dashboard() {
+  const { Products = [], orders = [], totalAmount = 0 } = useSelector(state => state.admin);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchAdminProduct());
+    dispatch(fetchAllOrders());
+  }, [dispatch]);
+
+  const totalProducts = Products.length;
+  const totalOrders = orders.length;
+  const outOfStock = Products.filter(product => product.stock === 0).length;
+  const inStock = Products.filter(product => product.stock > 0).length;
+  const totalReviews = Products.reduce((acc, product) => acc + (product.reviews?.length || 0), 0);
+
   return (
     <>
       <Navbar />
@@ -57,7 +75,7 @@ function Dashboard() {
             </div>
             <div className="nav-section">
               <h3>Reviews</h3>
-              <Link to="/admin/reviewId" className="nav-link">
+              <Link to="/admin/reviews" className="nav-link">
                 <Star className="nav-icon" />
                 All Reviews
               </Link>
@@ -69,32 +87,32 @@ function Dashboard() {
             <div className="stat-box">
               <Inventory2 className="icon" />
               <h3>Total Products</h3>
-              <p>150</p>
+              <p>{totalProducts}</p>
             </div>
             <div className="stat-box">
               <ShoppingCart className="icon" />
               <h3>Total Orders</h3>
-              <p>75</p>
+              <p>{totalOrders}</p>
             </div>
             <div className="stat-box">
               <Star className="icon" />
               <h3>Total Reviews</h3>
-              <p>50</p>
+              <p>{totalReviews}</p>
             </div>
             <div className="stat-box">
               <AttachMoney className="icon" />
               <h3>Total Revenue</h3>
-              <p>12025</p>
+              <p>${totalAmount}/-</p>
             </div>
             <div className="stat-box">
               <Error className="icon" />
               <h3>Out Of Stock Products</h3>
-              <p>5</p>
+              <p>{outOfStock}</p>
             </div>
             <div className="stat-box">
               <CheckCircle className="icon" />
               <h3>In Stock Products</h3>
-              <p>145</p>
+              <p>{inStock}</p>
             </div>
           </div>
 

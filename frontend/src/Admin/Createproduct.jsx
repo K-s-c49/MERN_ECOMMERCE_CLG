@@ -6,6 +6,7 @@ import Footer from '../components/Footer'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { createProduct, removeErrors, removeSuccess } from '../features/admin/adminSlice'
+import { categoriesData } from '../data/categories'
 
 function CreateProduct() {
   const { loading } = useSelector(state => state.admin)
@@ -14,15 +15,22 @@ function CreateProduct() {
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [description, setDescription] = useState('')
+  const [mainCategory, setMainCategory] = useState('')
   const [category, setCategory] = useState('')
   const [stock, setStock] = useState('')
   const [images, setImages] = useState([])
   const [imagesPreviews, setImagesPreviews] = useState([])
 
-  const categories = ['glass', 'electronics', 'clothing', 'accessories', 'books', 'home', 'beauty', 'sports', 'toys', 'automotive']
+  const selectedMain = categoriesData.find((c) => c?.name === mainCategory)
+  const subcategoryOptions = selectedMain?.subcategories || []
 
   const createProductSubmit = async (e) => {
     e.preventDefault()
+
+    if (!category) {
+      toast.error('Please choose a subcategory', { position: 'top-center', autoClose: 3000 })
+      return
+    }
 
     const productData = {
       name,
@@ -41,6 +49,7 @@ function CreateProduct() {
       setName('')
       setPrice('')
       setDescription('')
+      setMainCategory('')
       setCategory('')
       setStock('')
       setImages([])
@@ -111,15 +120,32 @@ function CreateProduct() {
           />
 
           <select
+            name="mainCategory"
+            className='form-select'
+            value={mainCategory}
+            required
+            onChange={(e) => {
+              setMainCategory(e.target.value)
+              setCategory('')
+            }}
+          >
+            <option value="">Choose a Category</option>
+            {categoriesData.map((c) => (
+              <option value={c.name} key={c.id}>{c.name}</option>
+            ))}
+          </select>
+
+          <select
             name="category"
             className='form-select'
             value={category}
             required
+            disabled={!mainCategory}
             onChange={(e) => setCategory(e.target.value)}
           >
-            <option value="">Choose a Category</option>
-            {categories.map((cat, index) => (
-              <option value={cat} key={index}>{cat}</option>
+            <option value="">Choose a Subcategory</option>
+            {subcategoryOptions.map((sub) => (
+              <option value={sub} key={sub}>{sub}</option>
             ))}
           </select>
 

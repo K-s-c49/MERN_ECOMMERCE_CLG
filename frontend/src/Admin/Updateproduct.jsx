@@ -10,11 +10,13 @@ import { useEffect } from 'react'
 import { getProductDetails } from '../features/products/productSlice'
 import { removeErrors, removeSuccess, updateProduct } from '../features/admin/adminSlice'
 import { toast } from 'react-toastify'
+import { categoriesData } from '../data/categories'
 
 function Updateproduct() {
   const [name, setName] = useState()
   const [price, setPrice] = useState()
   const [description, setDescription] = useState()
+  const [mainCategory, setMainCategory] = useState('')
   const [category, setCategory] = useState()
   const [stock, setStock] = useState()
   const [images, setImages] = useState([])
@@ -26,19 +28,6 @@ function Updateproduct() {
   const navigate = useNavigate()
   const { updateId } = useParams()
 
-    const catergory = [
-        "Electronics",
-        "Clothing",
-        "Home & Kitchen",
-        "Books",
-        "Sports",
-        "Beauty & Personal Care",
-        "Toys & Games",
-        "Automotive",
-        "Health & Wellness",
-        "Grocery"
-    ]
-
     useEffect(() => {
         dispatch(getProductDetails(updateId))
     }, [dispatch, updateId])
@@ -47,7 +36,19 @@ function Updateproduct() {
     const nameValue = name ?? (product?.name || '')
     const priceValue = price ?? (product?.price ?? '')
     const descriptionValue = description ?? (product?.description || '')
-    const categoryValue = category ?? (product?.category || '')
+    const inferredMainCategory =
+      categoriesData.find((c) => (c?.subcategories || []).includes(product?.category))
+        ?.name || ''
+
+    const mainCategoryValue = mainCategory || inferredMainCategory
+
+    // If user changed main category, force choosing a subcategory again.
+    const categoryValue = mainCategory
+      ? (category ?? '')
+      : (category ?? (product?.category || ''))
+
+    const selectedMain = categoriesData.find((c) => c?.name === mainCategoryValue)
+    const subcategoryOptions = selectedMain?.subcategories || []
     const stockValue = stock ?? (product?.stock ?? '')
 
     useEffect(() => {
@@ -86,10 +87,16 @@ function Updateproduct() {
     const updateProductSubmit = async (e) => {
       e.preventDefault()
 
+      if (!categoryValue) {
+        toast.error('Please select a subcategory', { position: 'top-center', autoClose: 3000 })
+        return
+      }
+
       const productData = {
         name: nameValue,
         price: Number(priceValue),
         description: descriptionValue,
+        // IMPORTANT: backend expects a single string category; we store the selected subcategory.
         category: categoryValue,
         stock: Number(stockValue),
       }
@@ -119,11 +126,43 @@ function Updateproduct() {
       <label htmlFor="product-description">Description:</label>
       <textarea className='update-product-textarea' required id='description' name='description' value={descriptionValue} onChange={(e) => setDescription(e.target.value)}></textarea> 
       <label htmlFor="product-category">Category:</label>
-      <select name="category" id="category" className='update-product-select' value={categoryValue} onChange={(e) => setCategory(e.target.value)}>
-        {catergory.map((item) => (
+      <select
+        name="mainCategory"
+        id="mainCategory"
+        className='update-product-select'
+        value={mainCategoryValue}
+        onChange={(e) => {
+          setMainCategory(e.target.value)
+          setCategory('')
+        }}
+      >
+        <option value="">Choose a Category</option>
+        {categoriesData.map((c) => (
+          <option key={c.id} value={c.name}>{c.name}</option>
+        ))}
+      </select>
+
+      <label htmlFor="product-subcategory">Subcategory:</label>
+      <select
+        name="category"
+        id="product-subcategory"
+        className='update-product-select'
+        value={categoryValue}
+        required
+        disabled={!mainCategoryValue}
+        onChange={(e) => setCategory(e.target.value)}
+      >
+        <option value="">Choose a Subcategory</option>
+        {/* Keep current category selectable even if not in the predefined list */}
+        {categoryValue &&
+          mainCategoryValue &&
+          !subcategoryOptions.includes(categoryValue) && (
+            <option value={categoryValue}>{categoryValue}</option>
+          )}
+        {subcategoryOptions.map((item) => (
           <option key={item} value={item}>{item}</option>
         ))}
-         </select>
+      </select>
       <label htmlFor="product-stock">Stock:</label>
       <input type="number" className='update-product-input' required id='stock' name='stock' value={stockValue} onChange={(e) => setStock(e.target.value)}/>
       <label htmlFor="product-images">Product Images:</label>

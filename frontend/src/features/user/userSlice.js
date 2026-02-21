@@ -93,6 +93,26 @@ export const forgotPassword = createAsyncThunk("user/forgotPassword", async (ema
         return rejectWithValue(message);
     }
 });
+
+export const resetPassword = createAsyncThunk(
+    "user/resetPassword",
+    async ({ token, password, confirmPassword }, { rejectWithValue }) => {
+        try {
+            const config = {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            };
+
+            // Backend route: POST /api/v1/reset/:token
+            const { data } = await axios.post(`/reset/${token}`, { password, confirmPassword }, config);
+            return data;
+        } catch (error) {
+            const message = error?.response?.data?.message || error?.message || "Reset password failed";
+            return rejectWithValue(message);
+        }
+    }
+);
 export const userSlice = createSlice({
     name: "user",
     initialState: {
@@ -270,6 +290,32 @@ export const userSlice = createSlice({
         .addCase(forgotPassword.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload || "Forgot password request failed";
+        });
+
+        // reset password case
+        builder
+        .addCase(resetPassword.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        })
+        .addCase(resetPassword.fulfilled, (state, action) => {
+            state.loading = false;
+            state.error = null;
+            state.success = Boolean(action.payload.success);
+            state.user = action.payload.user || null;
+            state.isAuthenticated = Boolean(action.payload.success);
+            state.message = action.payload.message || "Password reset successfully";
+
+            try {
+                localStorage.setItem('user', JSON.stringify(state.user));
+                localStorage.setItem('isAuthenticated', JSON.stringify(state.isAuthenticated));
+            } catch (e) {
+                console.warn('Failed to persist user after reset password', e);
+            }
+        })
+        .addCase(resetPassword.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || "Reset password failed";
         });
     }
 });

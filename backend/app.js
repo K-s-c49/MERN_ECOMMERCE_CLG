@@ -5,6 +5,7 @@ import error from './middleware/error.js';
 import cookieParser from 'cookie-parser';
 import  order  from './routes/orderroute.js';
 import Payment from './routes/paymentroute.js';
+import contact from './routes/contactroute.js';
 import cors from 'cors';
 import fileUpload from 'express-fileupload';
 import dotenv from 'dotenv';
@@ -29,6 +30,7 @@ app.use("/api/v1", product);
 app.use("/api/v1",user);
 app.use("/api/v1",order);
 app.use("/api/v1", Payment);
+app.use("/api/v1", contact);
 
 app.use(error);
 

@@ -50,6 +50,10 @@ function ProductDetails() {
   }, [dispatch, id]);
 
   useEffect(() => {
+    setSelectedImage(""); // Reset selectedImage when product changes
+  }, [product]);
+
+  useEffect(() => {
     if (error) {
       toast.error(error);
       dispatch(removeError());
@@ -152,19 +156,20 @@ function ProductDetails() {
       <Navbar />
       <div className="product-details-container">
         <div className="product-detail-container">
-          <div className="product-image-container">
-            <img
-              src={mainImageUrl}
-              alt={product.name}
-              className="product-detail-image"
-              loading="eager"
-              decoding="async"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "/images/productnotfound.png";
-              }}
-            />
-
+          <div className="product-image-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div className="product-image-container">
+              <img
+                src={mainImageUrl}
+                alt={product.name}
+                className="product-detail-image"
+                loading="eager"
+                decoding="async"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/images/productnotfound.png";
+                }}
+              />
+            </div>
             {product?.images?.length > 1 && (
               <div className="product-thumbnails">
                 {product.images.map((img, index) => (
@@ -193,7 +198,7 @@ function ProductDetails() {
               </div>
             )}
           </div>
-          
+
           <div className="product-info">
             <h2>{product.name}</h2>
             <p className="product-description">{product.description}</p>
@@ -204,7 +209,7 @@ function ProductDetails() {
             <div className="product-rating">
               <Rating value={product.ratings} disable={true} />
               <span className="productCardSpan">
-                ({product.numOfReviews}{" "}
+                ({product.numOfReviews} {" "}
                 {product.numOfReviews === 1 ? "Review" : "Reviews"})
               </span>
             </div>

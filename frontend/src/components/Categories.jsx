@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import '../componentStyles/Categories.css'
 import { categoriesData } from '../data/categories'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
@@ -21,25 +21,19 @@ const iconMap = {
 
 function Categories({ onCategorySelect, selectedCategory }) {
     const [expandedCategory, setExpandedCategory] = useState(1); // First category open by default
-    const [activeSubcategory, setActiveSubcategory] = useState(selectedCategory || null);
-
-    useEffect(() => {
-        setActiveSubcategory(selectedCategory || null);
-    }, [selectedCategory]);
+    const activeSubcategory = selectedCategory || null;
 
     const handleCategoryToggle = (categoryId) => {
         setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
     };
 
     const handleSubcategoryClick = (subcategory) => {
-        setActiveSubcategory(subcategory);
         if (onCategorySelect) {
             onCategorySelect(subcategory);
         }
     };
 
     const handleClearFilter = () => {
-        setActiveSubcategory(null);
         if (onCategorySelect) {
             onCategorySelect('');
         }

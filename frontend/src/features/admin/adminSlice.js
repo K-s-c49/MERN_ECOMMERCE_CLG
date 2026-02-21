@@ -182,7 +182,8 @@ export const deleteOrder = createAsyncThunk(
 export const updateOrderStatus = createAsyncThunk(
   'admin/updateOrderStatus',
   async ({ orderId, status }, { rejectWithValue }) => {
-    try {      const { data } = await axios.put(
+    try {
+      const { data } = await axios.put(
         `/admin/order/${orderId}`,
         { status },
         { headers: { 'Content-Type': 'application/json' } }
@@ -193,6 +194,42 @@ export const updateOrderStatus = createAsyncThunk(
         error?.response?.data?.message ||
         error?.message ||
         'error while updating the order status';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+// Fetch all reviews
+export const fetchProductReviews = createAsyncThunk(
+  'admin/fetchProductReviews',
+  async (productId, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get(`/reviews?id=${productId}`);
+      return data;
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'error while fetching the product reviews';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+// delete review for admin dashboard
+export const deleteReview = createAsyncThunk(
+  'admin/deleteReview',
+  async ({ productId, reviewId }, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.delete(
+        `/reviews?productId=${productId}&id=${reviewId}`
+      );
+      return data;
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'error while deleting the review';
       return rejectWithValue(message);
     }
   }
@@ -212,6 +249,8 @@ const AdminSlice = createSlice({
     message: null,
     orders: [],
     totalAmount: 0,
+    order: {},
+    reviews: []
   },
   reducers: {
     removeErrors: (state) => {
@@ -413,6 +452,35 @@ const AdminSlice = createSlice({
       .addCase(updateOrderStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to update order status';
+      });
+        // fetch product reviews
+      builder
+      .addCase(fetchProductReviews.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProductReviews.fulfilled, (state, action) => {
+        state.loading = false;
+        state.reviews = action.payload.reviews;
+      })
+      .addCase(fetchProductReviews.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Failed to fetch product reviews';
+      });
+      // delete review
+      builder
+      .addCase(deleteReview.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteReview.fulfilled, (state, action) => {
+        state.loading = false;
+       state.success = action.payload.success;
+       state.message = action.payload.message;
+      })
+      .addCase(deleteReview.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Failed to delete review';
       });
   },
 });
